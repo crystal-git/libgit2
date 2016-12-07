@@ -1,6 +1,10 @@
 language: crystal
-dist: trusty
-sudo: required
+
+addons:
+  apt:
+    packages:
+    - libssh2-1
+    - libssh2-1-dev
 
 script:
   - scripts/travis

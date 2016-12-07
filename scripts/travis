@@ -9,5 +9,6 @@ mkdir build
 cd build
 cmake ..
 cd ../..
+cmake --build .
 export CRYSTAL_GIT_LDFLAGS="-L`pwd`/libgit2/build"
 crystal spec -D travis
