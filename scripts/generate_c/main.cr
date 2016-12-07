@@ -7,7 +7,7 @@ module Git
     "git2.h",
     prefix: %w(git_ GIT_ Git))]
   {% if flag?(:travis) %}
-    @[Link(ldflags: "{{ENV["CRYSTAL_GIT_LDFLAGS"]}}")]
+    @[Link(ldflags: "{{ env("CRYSTAL_GIT_LDFLAGS") }}")]
   {% else %}
     @[Link("git2")]
   {% end %}
