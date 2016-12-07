@@ -1,12 +1,7 @@
 #!/usr/bin/env bash
 
-BIN_INSTALL_DIR="`pwd`/git2/bin"
-LIB_INSTALL_DIR="`pwd`/git2/lib"
-INCLUDE_INSTALL_DIR="`pwd`/git2/include"
-BUILD_CLAR=off
-mkdir -p "${BIN_INSTALL_DIR}"
-mkdir -p "${LIB_INSTALL_DIR}"
-mkdir -p "${INCLUDE_INSTALL_DIR}"
+LIBGIT2="`pwd`/git2"
+mkdir -p "${LIBGIT2}"
 mkdir libgit2
 cd libgit2
 git init
@@ -15,11 +10,9 @@ git pull origin v0.24.3
 mkdir build
 cd build
 cmake .. \
-  -DBIN_INSTALL_DIR="${BIN_INSTALL_DIR}" \
-  -DLIB_INSTALL_DIR="${LIB_INSTALL_DIR}" \
-  -DINCLUDE_INSTALL_DIR="${INCLUDE_INSTALL_DIR}" \
-  -DBUILD_CLAR="${BUILD_CLAR}"
+  -DCMAKE_INSTALL_PREFIX="${LIBGIT2}" \
+  -DBUILD_CLAR=off
 cmake --build . --target install
 cd ../..
-export CRYSTAL_GIT_LDFLAGS="-L${LIB_INSTALL_DIR}"
+export CRYSTAL_GIT_LDFLAGS="-L${LIBGIT2}/lib -rpath ${LIBGIT2}/lib"
 crystal spec -D travis
