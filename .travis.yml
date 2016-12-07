@@ -1,6 +1,5 @@
 language: crystal
 
-addons:
-  apt:
-    packages:
-      - libgit2-dev
+before_install:
+  - sudo apt-get -qq update
+  - sudo apt-get install -y libgit2-dev

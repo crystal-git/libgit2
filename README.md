@@ -42,7 +42,7 @@ puts `git branch` # => "* master"
 
 remote = Git::Repo.from_path(Dir.current).remotes["origin"]
 remote.fetch_url # => https://github.com/mosop/fetch.git
-remotes.push_url # => https://github.com/mosop/push.git
+remote.push_url # => https://github.com/mosop/push.git
 ```
 
 ## Usage
