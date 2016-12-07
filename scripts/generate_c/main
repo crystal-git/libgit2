@@ -1,0 +1,3 @@
+#!/usr/bin/env bash
+
+crystal run scripts/generate_c/main.cr --link-flags "$($LLVM_CONFIG --ldflags)"

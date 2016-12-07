@@ -1,0 +1,6 @@
+language: crystal
+
+addons:
+  apt:
+    packages:
+      - libgit2-dev

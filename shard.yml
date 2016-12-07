@@ -1,0 +1,17 @@
+name: git
+version: 0.1.0
+
+authors:
+  - mosop
+
+crystal: 0.19.4
+
+license: MIT
+
+development_dependencies:
+  crystal_plus:
+    github: mosop/crystal_plus
+    version: 0.1.2
+  stdio:
+    github: mosop/stdio
+    version: 0.1.3
