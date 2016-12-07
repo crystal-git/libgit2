@@ -3,4 +3,5 @@ dist: trusty
 sudo: required
 
 before_install:
-  - scripts/install_libgit2
+  - sudo apt-get -qq update
+  - sudo apt-get install -y libgit2-dev
