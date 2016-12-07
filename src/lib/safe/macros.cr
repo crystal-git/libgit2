@@ -61,7 +61,7 @@ class Git::Safe
   end
 
   macro call(f, *args, &block)
-    %result = C.{{f.id}}({{args.argify}})
+    %result = C.{{f.id}}({{args.splat}})
     {% if block %}
       %call = ::Git::Safe::Call.new({{f.id.stringify}}, %result, C.giterr_last)
       ::Git::Util.yield_with(%call) {{block}}
@@ -71,11 +71,11 @@ class Git::Safe
   end
 
   macro string(f, *args)
-    String.new(C.{{f.id}}({{args.argify}}))
+    String.new(C.{{f.id}}({{args.splat}}))
   end
 
   macro string_or_nil(f, *args)
-    result = C.{{f.id}}({{args.argify}})
+    result = C.{{f.id}}({{args.splat}})
     result == Pointer(UInt8).null ? nil : String.new(result)
   end
 end
