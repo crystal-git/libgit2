@@ -1,0 +1,13 @@
+#!/usr/bin/env bash
+
+mkdir libgit2
+cd libgit2
+git init
+git remote add origin https://github.com/libgit2/libgit2.git
+git pull origin v0.24.3
+mkdir build
+cd build
+cmake ..
+cd ../..
+export CRYSTAL_GIT_LDFLAGS="-L`pwd`/libgit2/build"
+crystal spec -D travis

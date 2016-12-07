@@ -1,8 +1,0 @@
-#!/usr/bin/env bash
-
-wget https://github.com/libgit2/libgit2/archive/v0.24.2.tar.gz
-tar xzf v0.24.2.tar.gz
-cd libgit2-0.24.2/
-cmake .
-make
-sudo make install
