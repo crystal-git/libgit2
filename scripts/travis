@@ -10,6 +10,6 @@ cd build
 cmake ..
 cmake --build .
 cd ../..
-echo debug `ls -all /home/travis/build/mosop/git/libgit2/build`
+ls -all /home/travis/build/mosop/git/libgit2/build
 export CRYSTAL_GIT_LDFLAGS="-L`pwd`/libgit2/build"
 crystal spec -D travis
