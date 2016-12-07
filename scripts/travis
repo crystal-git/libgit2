@@ -14,13 +14,12 @@ git remote add origin https://github.com/libgit2/libgit2.git
 git pull origin v0.24.3
 mkdir build
 cd build
-cmake \
+cmake .. \
   -DBIN_INSTALL_DIR="${BIN_INSTALL_DIR}" \
   -DLIB_INSTALL_DIR="${LIB_INSTALL_DIR}" \
   -DINCLUDE_INSTALL_DIR="${INCLUDE_INSTALL_DIR}" \
   -DBUILD_CLAR="${BUILD_CLAR}"
-  ..
 cmake --build . --target install
 cd ../..
-export CRYSTAL_GIT_LDFLAGS="-L`pwd`/git2/lib"
+export CRYSTAL_GIT_LDFLAGS="-L${LIB_INSTALL_DIR}"
 crystal spec -D travis
