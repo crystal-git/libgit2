@@ -11,9 +11,9 @@ module Git
     private def initialize(@safe : Safe::Repository)
     end
 
-    def self.from_path(path)
+    def initialize(path : String)
       Safe.call :repository_open, out unsafe, path
-      new(Safe::Repository.safe(unsafe))
+      initialize Safe::Repository.safe(unsafe)
     end
 
     @path : String?

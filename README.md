@@ -27,10 +27,10 @@ dependencies:
 `git init`
 `git remote add origin https://github.com/mosop/git.git`
 
-repo = Git::Repo.from_path(Dir.current)
+repo = Git::Repo.new(Dir.current)
 repo.remotes["origin"].checkout("master")
 
-puts `git branch` # => "* master"
+puts `git branch` # prints "* master"
 ```
 
 ### Remote URLs
@@ -40,7 +40,7 @@ puts `git branch` # => "* master"
 `git remote add origin https://github.com/mosop/fetch.git`
 `git remote set-url --push origin https://github.com/mosop/push.git`
 
-remote = Git::Repo.from_path(Dir.current).remotes["origin"]
+remote = Git::Repo.new(Dir.current).remotes["origin"]
 remote.fetch_url # => https://github.com/mosop/fetch.git
 remote.push_url # => https://github.com/mosop/push.git
 ```

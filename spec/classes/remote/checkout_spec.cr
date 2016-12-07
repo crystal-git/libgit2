@@ -10,7 +10,7 @@ module GitRemoteClassCheckoutFeature
           `git clone https://github.com/mosop/git-test.git 2>/dev/null`
           dir = "#{tmpdir}/git-test"
           Dir.cd(dir) do
-            remote = Git::Dir.new(dir).repo.remotes["origin"]
+            remote = Git::Repo.new(dir).remotes["origin"]
             remote.checkout("test")
             `git branch`.should eq "  master\n* test\n"
           end
@@ -23,7 +23,7 @@ module GitRemoteClassCheckoutFeature
         Dir.cd(tmpdir) do
           `git init`
           `git remote add origin https://github.com/mosop/git-test.git`
-          remote = Git::Dir.new(tmpdir).repo.remotes["origin"]
+          remote = Git::Repo.new(tmpdir).remotes["origin"]
           remote.checkout("test")
           `git branch`.should eq "* test\n"
         end
