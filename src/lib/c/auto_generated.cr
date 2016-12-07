@@ -1,6 +1,7 @@
 module Git
   {% if flag?(:travis) %}
     @[Link(ldflags: {{ env("CRYSTAL_GIT_LDFLAGS") }})]
+    @[Link("libgit2")]
   {% else %}
     @[Link("git2")]
   {% end %}
