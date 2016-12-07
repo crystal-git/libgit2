@@ -1,5 +1,12 @@
 #!/usr/bin/env bash
 
+export BIN_INSTALL_DIR="`pwd`/git2/bin"
+export LIB_INSTALL_DIR="`pwd`/git2/lib"
+export INCLUDE_INSTALL_DIR="`pwd`/git2/include"
+export BUILD_CLAR=off
+mkdir -p "$BIN_INSTALL_DIR"
+mkdir -p "$LIB_INSTALL_DIR"
+mkdir -p "$INCLUDE_INSTALL_DIR"
 mkdir libgit2
 cd libgit2
 git init
@@ -8,8 +15,7 @@ git pull origin v0.24.3
 mkdir build
 cd build
 cmake ..
-cmake --build .
+cmake --build . --target install
 cd ../..
-ls -all /home/travis/build/mosop/git/libgit2/build
-export CRYSTAL_GIT_LDFLAGS="-L`pwd`/libgit2/build"
+export CRYSTAL_GIT_LDFLAGS="-L`pwd`/git2/lib"
 crystal spec -D travis
