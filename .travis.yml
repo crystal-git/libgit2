@@ -1,4 +1,8 @@
 language: crystal
 
 before_install:
-  - scripts/travis
+  - wget https://github.com/libgit2/libgit2/archive/v0.24.2.tar.gz
+  - tar xzf v0.24.2.tar.gz
+  - cd libgit2-0.24.2/ && cmake .
+  - cd libgit2-0.24.2/ && make
+  - cd libgit2-0.24.2/ && make install
