@@ -8,7 +8,7 @@ git pull origin v0.24.3
 mkdir build
 cd build
 cmake ..
-cd ../..
 cmake --build .
+cd ../..
 export CRYSTAL_GIT_LDFLAGS="-L`pwd`/libgit2/build"
 crystal spec -D travis
