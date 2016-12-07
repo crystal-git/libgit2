@@ -3,4 +3,8 @@ language: crystal
 addons:
   apt:
     packages:
-      - libgit2-dev
+    - libssh2-1
+    - libssh2-1-dev
+
+script:
+- scripts/travis

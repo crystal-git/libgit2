@@ -1,4 +1,7 @@
 module Git
+  {% if flag?(:travis) %}
+    @[Link(ldflags: {{ env("CRYSTAL_GIT_LDFLAGS") }})]
+  {% end %}
   @[Link("git2")]
   lib C
     PATH_MAX = 4096
@@ -1467,9 +1470,6 @@ module Git
     Emergeconflict = -24
     Passthrough = -30
     Iterover = -31
-    fun clear = giterr_clear
-    fun set_str = giterr_set_str(error_class : LibC::Int, string : LibC::Char*)
-    fun set_oom = giterr_set_oom
     FilterToWorktree = 0
     FilterSmudge = 0
     FilterToOdb = 1

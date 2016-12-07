@@ -6,6 +6,9 @@ module Git
   @[Include(
     "git2.h",
     prefix: %w(git_ GIT_ Git))]
+  {% if flag?(:travis) %}
+    @[Link(ldflags: {{ env("CRYSTAL_GIT_LDFLAGS") }})]
+  {% end %}
   @[Link("git2")]
   lib C
   end
