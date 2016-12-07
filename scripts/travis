@@ -1,5 +1,6 @@
 #!/usr/bin/env bash
 
+echo cd `pwd`
 mkdir libgit2
 cd libgit2
 git init
@@ -9,6 +10,8 @@ mkdir build
 cd build
 cmake ..
 cmake --build .
+ls -all
 cd ../..
+echo cd `pwd`
 export CRYSTAL_GIT_LDFLAGS="-L`pwd`/libgit2/build"
 crystal spec -D travis
