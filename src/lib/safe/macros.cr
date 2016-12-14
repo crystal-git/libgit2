@@ -47,13 +47,16 @@ class Git::Safe
   end
 
   macro define_value_property(name)
-    def {{name.id}}
+    {%
+      method = name.id.split(".").join("__")
+    %}
+    def {{method.id}}
       with_safe do
         unsafe.{{name.id}}
       end
     end
 
-    def {{name.id}}=(v)
+    def {{method.id}}=(v)
       with_safe do
         unsafe.{{name.id}} = v
       end

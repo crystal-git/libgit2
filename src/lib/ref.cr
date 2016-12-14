@@ -26,7 +26,7 @@ module Git
       end
     end
 
-    def head!
+    def set_head
       repo.set_head name
     end
 

@@ -7,6 +7,7 @@ module Git
     end
 
     @safe : Safe::Repository
+    property! credential : Credentials::Base?
 
     private def initialize(@safe : Safe::Repository)
     end
@@ -14,6 +15,20 @@ module Git
     def initialize(path : String)
       Safe.call :repository_open, out unsafe, path
       initialize Safe::Repository.safe(unsafe)
+    end
+
+    def self.exists?(path : String)
+      begin
+        new(path)
+        true
+      rescue ex : Safe::CallError
+        case ex.result
+        when C::Enotfound
+          false
+        else
+          raise ex
+        end
+      end
     end
 
     @path : String?
@@ -68,6 +83,11 @@ module Git
       end
     end
 
+    def head
+      Safe.call :repository_head, out ref, @safe
+      Ref.new(self, Safe::Reference.safe(ref))
+    end
+
     def set_head(refname)
       Safe.call :repository_set_head, @safe, refname
     end
@@ -96,13 +116,16 @@ module Git
       end
     end
 
-    # def checkout_tree(treeish, options = nil)
-    #   options ||= begin
-    #     opts = CheckoutOptions.init
-    #     opts.checkout_strategy = C::CheckoutSafe
-    #     opts
-    #   end
-    #   Safe.call :checkout_tree, self, treeish, options.p
-    # end
+    def checkout(name)
+      if ref = lookup_ref(name)
+        checkout ref
+        return
+      end
+      checkout create_ref(name, head.to_oid)
+    end
+
+    def checkout(ref : Ref)
+      ref.set_head
+    end
   end
 end
