@@ -9,5 +9,21 @@ module Git
     def type
       C.object_type safe
     end
+
+    def commit?
+      type == C::ObjCommit
+    end
+
+    def tree?
+      type == C::ObjTree
+    end
+
+    def blob?
+      type == C::ObjBlob
+    end
+
+    def tag?
+      type == C::ObjTag
+    end
   end
 end

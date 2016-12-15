@@ -38,29 +38,30 @@ module Git
       end
     end
 
-    def checkout(remote_name : String, create_local = false)
-      remote_name = "refs/remotes/#{self.name}/#{remote_name}" unless remote_name.starts_with?("refs/remotes/#{self.name}/")
+    def checkout(remote_name, name_as = nil, create = false, force_fetch = false)
+      remote_name = Ref.normalize_remote(remote_name, name)
+      unless force_fetch
+        if ref = repo.lookup_ref(remote_name)
+          if ref.remote?
+            checkout ref, name_as
+            return
+          end
+        end
+      end
+      local_name = Ref.to_local(remote_name)
+      fetch ["+#{local_name}:#{remote_name}"]
       if ref = repo.lookup_ref(remote_name)
         if ref.remote?
-          checkout ref
+          checkout ref, name_as
           return
         end
       end
-      local = remote_name.sub(/^refs\/remotes\/#{name}/, "refs/heads")
-      fetch ["+#{local}:#{remote_name}"]
-      if ref = repo.lookup_ref(remote_name)
-        if ref.remote?
-          checkout ref
-          return
-        end
-      end
-      repo.checkout(local) if create_local
+      repo.checkout name_as || local_name, create: create
     end
 
-    def checkout(remote_ref : Ref)
-      local = remote_ref.name.sub(/^refs\/remotes\/#{name}/, "refs/heads")
-      ref = repo.create_ref(local, remote_ref.to_oid)
-      ref.set_head
+    def checkout(remote_ref : Ref, name_as = nil)
+      name_as ||= Ref.to_local(remote_ref.name)
+      repo.checkout remote_ref, name_as
     end
 
     def fetch(refspecs = nil)
@@ -74,6 +75,10 @@ module Git
         opts
         Safe.call :remote_fetch, @safe, refspecs, opts.p, Util.null_pstr
       end
+    end
+
+    def pull(remote_name, name_as = nil, create = false)
+      checkout remote_name, name_as: name_as, create: create, force_fetch: true
     end
 
     # @service : RemoteService?

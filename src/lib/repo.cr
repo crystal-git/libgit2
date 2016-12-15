@@ -83,6 +83,11 @@ module Git
       end
     end
 
+    def lookup_object(oid : Oid, type : LibC::Int = C::ObjAny)
+      Safe.call :object_lookup, out obj, @safe, oid.safe, type
+      Object.new(self, Safe::Object.safe(obj))
+    end
+
     def head
       Safe.call :repository_head, out ref, @safe
       Ref.new(self, Safe::Reference.safe(ref))
@@ -97,7 +102,9 @@ module Git
         if call.success?
           Ref.new(self, Safe::Reference.safe(ref))
         elsif call.result == C::Eexists
-          lookup_ref(name).not_nil!
+          old_ref = lookup_ref(name).not_nil!
+          Safe.call :reference_set_target, out new_ref, old_ref.safe, oid.safe.p, Util.null_pstr
+          Ref.new(self, Safe::Reference.safe(new_ref))
         else
           call.raise!
         end
@@ -116,16 +123,33 @@ module Git
       end
     end
 
-    def checkout(name)
+    def checkout(name : String, name_as : String? = nil, create = false)
+      name = Ref.normalize(name)
       if ref = lookup_ref(name)
-        checkout ref
-        return
+        checkout ref, name_as
+      elsif create
+        create_ref Ref.normalize(name_as || name), head.to_oid
       end
-      checkout create_ref(name, head.to_oid)
     end
 
-    def checkout(ref : Ref)
-      ref.set_head
+    def checkout(ref : Ref, name_as : String? = nil)
+      if treeish = parse_rev(ref.name)
+        Safe.call :checkout_tree, @safe, treeish.safe, new_checkout_options.p
+        name = Ref.to_local(name_as ? Ref.normalize(name_as) : ref.name)
+        create_ref(name, ref.to_oid).set_head
+      end
+    end
+
+    def new_checkout_options
+      Safe::CheckoutOptions.init.tap do |o|
+        o.checkout_strategy =
+          C::CheckoutSafe |
+          C::CheckoutRecreateMissing |
+          C::CheckoutAllowConflicts |
+          C::CheckoutSkipUnmerged |
+          C::CheckoutSkipLockedDirectories |
+          C::CheckoutDontOverwriteIgnored
+      end
     end
   end
 end

@@ -5,5 +5,9 @@ module Git
 
     def initialize(@repo, @safe)
     end
+
+    def to_object
+      repo.lookup_object self
+    end
   end
 end
