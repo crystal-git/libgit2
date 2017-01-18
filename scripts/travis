@@ -15,4 +15,4 @@ cmake .. \
 cmake --build . --target install
 cd ../..
 export CRYSTAL_GIT_LDFLAGS="-L${GIT2}/lib -Wl,-rpath ${GIT2}/lib"
-crystal spec -D travis
+crystal spec
