@@ -12,23 +12,32 @@ module Git
     private def initialize(@safe : Safe::Repository)
     end
 
-    def initialize(path : String)
-      Safe.call :repository_open, out unsafe, path
-      initialize Safe::Repository.safe(unsafe)
+    def self.open?(path : String)
+      begin
+        open(path)
+      rescue ex : Safe::CallError
+        raise ex if ex.result != C::Enotfound
+      rescue NotExactLocation
+      end
     end
 
-    def self.exists?(path : String)
-      begin
-        new(path)
-        true
-      rescue ex : Safe::CallError
-        case ex.result
-        when C::Enotfound
-          false
+    def self.open(path : String)
+      Safe.call :repository_open, out unsafe, path do |call|
+        if call.success?
+          git = new(Safe::Repository.safe(unsafe))
+          expected = File.real_path(path)
+          actual = File.real_path(git.path)
+          raise NotExactLocation.new(expected, actual) unless actual.starts_with?(expected)
+          git
         else
-          raise ex
+          call.raise!
         end
       end
+    end
+
+    def self.init(path : String, bare = false)
+      Safe.call :repository_init, out unsafe, path, bare ? 1 : 0
+      new(Safe::Repository.safe(unsafe))
     end
 
     @path : String?
@@ -45,6 +54,20 @@ module Git
           h[name] = lookup_remote(name).not_nil!
         end
       end
+    end
+
+    def lookup_or_create_remote(name : String, url : String)
+      lookup_remote(name) || create_remote(name, url)
+    end
+
+    def create_remote(name : String, url : String)
+      Safe.call :remote_create, out unsafe, @safe, name, url
+      update_remotes
+      Remote.new(self, Safe::Remote.safe(unsafe), name)
+    end
+
+    def update_remotes
+      @remotes = nil
     end
 
     def lookup_remote(name)

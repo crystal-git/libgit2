@@ -1,10 +1,10 @@
 name: git
-version: 0.2.3
+version: 0.3.0
 
 authors:
   - mosop
 
-crystal: 0.19.4
+crystal: 0.20.5
 
 license: MIT
 
