@@ -116,6 +116,14 @@ module Git
       Ref.new(self, Safe::Reference.safe(ref))
     end
 
+    def head?
+      begin
+        head
+      rescue ex : Safe::CallError
+        raise ex if ex.result != C::Eunbornbranch
+      end
+    end
+
     def set_head(refname)
       Safe.call :repository_set_head, @safe, refname
     end
