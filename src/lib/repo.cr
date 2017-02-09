@@ -182,5 +182,10 @@ module Git
           C::CheckoutDontOverwriteIgnored
       end
     end
+
+    def lookup_commit(oid : Oid)
+      Safe.call :commit_lookup, out commit, @safe, oid.safe.p
+      Commit.new(self, Safe::Commit.safe(commit))
+    end
   end
 end

@@ -49,7 +49,7 @@ module Git
         end
       end
       local_name = Ref.to_local(remote_name)
-      fetch ["+#{local_name}:#{remote_name}"]
+      fetch "+#{local_name}:#{remote_name}"
       if ref = repo.lookup_ref(remote_name)
         if ref.remote?
           checkout ref, name_as
@@ -64,11 +64,13 @@ module Git
       repo.checkout remote_ref, name_as
     end
 
-    def fetch(refspecs = nil)
+    def fetch(refspec : String)
+      fetch [refspec]
+    end
+
+    def fetch(refspecs : Array(String)? = nil)
       refspecs = Safe::StaticStrarray.new(refspecs || %w())
-      CallbackPayload.box do |pl, box|
-        pl.remote = self
-        pl.credential = credential? || repo.credential? || Credentials::DefaultSshKey.instance
+      with_callback_payload do |pl, box|
         opts = Safe::FetchOptions.init
         opts.callbacks__credentials = pl.credential.callback
         opts.callbacks__payload = box
@@ -81,17 +83,27 @@ module Git
       checkout remote_name, name_as: name_as, create: create, force_fetch: true
     end
 
-    # @service : RemoteService?
-    # def service
-    #   @service ||= resolve_service
-    # end
-    #
-    # def resolve_service
-    #   if fetch_url.host == "github.com"
-    #     RemoteServices::Github.new(self)
-    #   else
-    #     RemoteServices::Unknown.new(self)
-    #   end
-    # end
+    def push(refspec : String)
+      push [refspec]
+    end
+
+    def push(refspecs : Array(String)? = nil)
+      refspecs ||= %w()
+      refspecs = Safe::StaticStrarray.new(refspecs)
+      with_callback_payload do |pl, box|
+        opts = Safe::PushOptions.init
+        opts.callbacks__credentials = pl.credential.callback
+        opts.callbacks__payload = box
+        Safe.call :remote_push, @safe, refspecs, opts.p
+      end
+    end
+
+    def with_callback_payload
+      CallbackPayload.box do |pl, box|
+        pl.remote = self
+        pl.credential = credential? || repo.credential? || Credentials::DefaultSshKey.instance
+        yield pl, box
+      end
+    end
   end
 end

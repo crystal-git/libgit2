@@ -51,8 +51,22 @@ module Git
       to_oid?.not_nil!
     end
 
+    def to_commit?
+      if oid = to_oid?
+        repo.lookup_commit(oid)
+      end
+    end
+
+    def to_commit
+      to_commit?.not_nil!
+    end
+
     REFS_REMOTES_REMOTE = /^refs\/remotes\/([^\/]+)\/(.+)$/
     REMOTES_REMOTE = /^remotes\/(^\/]+)\/(.+)$/
+
+    def self.remote?(name)
+      normalize(name).starts_with?("/refs/remotes/")
+    end
 
     def self.normalize(name)
       if REFS_REMOTES_REMOTE =~ name
