@@ -1,8 +1,8 @@
 module Git
   {% if flag?(:crystal_git_static) %}
-    @[Link(static: true, ldflags: {{ env("CRYSTAL_GIT_LDFLAGS") || ""}})]
+    @[Link(static: true, ldflags: {{ (env("CRYSTAL_GIT_LDFLAGS")) || "" }})]
   {% else %}
-    @[Link("git2", ldflags: {{ env("CRYSTAL_GIT_LDFLAGS") || "" }})]
+    @[Link("git2", ldflags: {{ (env("CRYSTAL_GIT_LDFLAGS")) || "" }})]
   {% end %}
   lib C
     PATH_MAX = 4096

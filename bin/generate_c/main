@@ -1,0 +1,18 @@
+#!/usr/bin/env bash
+
+_exit() {
+  rm -rf $builddir
+  cd $current
+  exit $1
+}
+
+current=`pwd`
+builddir=$current/build
+mkdir $builddir
+cd $builddir
+tar=v0.24.6.tar.gz
+curl -L -O https://github.com/libgit2/libgit2/archive/$tar || _exit 1
+tar xzf $tar --strip-components=1 || _exit 1
+cd $current
+crystal run bin/generate_c/main.cr --link-flags "`llvm-config-3.8 --ldflags`" -- $builddir/include || _exit 1
+_exit 0

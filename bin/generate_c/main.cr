@@ -4,12 +4,14 @@ require "../submodules/crystal_lib/src/crystal_lib"
 node = Crystal::Parser.parse(<<-EOS
 module Git
   @[Include(
-    "git2.h",
+    "#{ARGV[0]}/git2.h",
+    "#{ARGV[0]}/git2/global.h",
     prefix: %w(git_ GIT_ Git))]
-  {% if flag?(:travis) %}
-    @[Link(ldflags: {{ env("CRYSTAL_GIT_LDFLAGS") }})]
+  {% if flag?(:crystal_git_static) %}
+    @[Link(static: true, ldflags: {{ env("CRYSTAL_GIT_LDFLAGS") || ""}})]
+  {% else %}
+    @[Link("git2", ldflags: {{ env("CRYSTAL_GIT_LDFLAGS") || "" }})]
   {% end %}
-  @[Link("git2")]
   lib C
   end
 end
