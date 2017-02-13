@@ -6,7 +6,7 @@ mkdir libgit2
 cd libgit2
 git init
 git remote add origin https://github.com/libgit2/libgit2.git
-git pull origin v0.24.6
+git pull origin v0.25.1
 mkdir build
 cd build
 cmake .. \
