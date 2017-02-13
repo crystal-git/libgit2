@@ -25,5 +25,9 @@ module Git
     def tag?
       type == C::ObjTag
     end
+
+    def id
+      Oid.new(Safe::Oid.value(C.object_id(@safe).value))
+    end
   end
 end
