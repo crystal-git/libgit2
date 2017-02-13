@@ -159,7 +159,7 @@ module Git
     #
     # Creates a initial commit first if the head is unborn.
     def create_ref(name : String, initial_commit_message : String? = "initial", force = false)
-      create_empty_commit message: initial_commit_message if !head?
+      create_commit message: initial_commit_message if !head?
       create_ref(name, head.to_oid, force: force)
     end
 
