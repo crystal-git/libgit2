@@ -1,61 +1,63 @@
 module Git
-  class Url
-    class Invalid < Git::Exception
-      def initialize(s)
-        super "Invalid Git URL: #{s}"
-      end
-    end
-
+  struct Url
     getter string : String
-    getter! host : String?
     getter path : String
-    getter? local : Bool
+    getter? scheme : String?
+    getter? host : String?
+    getter? user : String?
+    getter? port : Int32?
 
-    def initialize(@string, @host, @path, @local)
-      if host = @host
-        raise Invalid.new(@string) if host.empty?
-      else
-        raise Invalid.new(@string) unless @local
-      end
-      raise Invalid.new(@string) if @path.empty?
+    def initialize(@string, @path, @scheme, @host, @user, @port)
     end
 
-    URI_PATTERN = /^(\w+):\/\//
-    SCP_LIKE_PATTERN = /^[^\/]+:./
+    URL_PATTERN = /^\w+:\/\//
+    SCP_LIKE_PATTERN = /^[^\/]+:/
 
     def self.parse(s)
       if s.starts_with?("/") || s.starts_with?(".")
-        new(s, nil, s, true)
-      elsif s.starts_with?("file://")
-        new(s, nil, s["file://".size..-1], true)
-      elsif URI_PATTERN =~ s
-        case $1
-        when "ssh", "git"
-          uri = URI.parse(s)
-          parse_user_extension(s, uri.host, uri.path.to_s)
-        else
-          uri = URI.parse(s)
-          new(s, uri.host, uri.path.to_s, false)
-        end
+        parse_local_path(s)
+      elsif URL_PATTERN =~ s
+        parse_url(s)
       elsif SCP_LIKE_PATTERN =~ s
-        a = s.split(":")
-        host = a[0].includes?("@") ? a[0].split("@")[1..-1].join("@") : a[0]
-        path = a[1..-1].join(":")
-        path = "/#{path}" if !path.starts_with?("/")
-        parse_user_extension(s, host, path)
+        parse_scp_like(s)
       else
-        raise Invalid.new(s)
+        raise InvalidUrl.new(s)
       end
     end
 
-    def self.parse_user_extension(s, host, path)
-      a = path.split("/")
-      if a[1]? && a[1].starts_with?("~")
-        a.shift
-        a.shift
-        a.unshift ""
+    def self.parse_local_path(s)
+      Url.new(string: s, path: s, scheme: nil, host: nil, user: nil, port: nil)
+    end
+
+    def self.parse_url(s)
+      uri = URI.parse(s)
+      case uri.scheme
+      when "ssh", "git"
+        parse_url_with_username_expansion(s, uri)
+      else
+        parse_url_without_username_expansion(s, uri)
       end
-      new(s, host, a.join("/"), false)
+    end
+
+    def self.parse_url_with_username_expansion(s, uri)
+      a = uri.path.to_s.split("/")
+      user = if a[1]? && a[1].starts_with?("~")
+        a.shift
+        u = a.shift
+        a.unshift ""
+        u[1..-1]
+      else
+        uri.user
+      end
+      Url.new(string: s, path: a.join("/"), scheme: uri.scheme, host: uri.host, user: user, port: uri.port)
+    end
+
+    def self.parse_url_without_username_expansion(s, uri)
+      Url.new(string: s, path: uri.path.to_s, scheme: uri.scheme, host: uri.host, user: uri.user, port: uri.port)
+    end
+
+    def self.parse_scp_like(s)
+      parse_url_with_username_expansion(s, URI.parse("ssh://" + s.split(":").join("/").sub("//", "/")))
     end
   end
 end

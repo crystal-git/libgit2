@@ -11,7 +11,7 @@ module GitRemoteClassFetchUrlFeature
         `git remote set-url --push origin https://github.com/mosop/push.git`
         remote = Git::Repo.open(tmpdir).remotes["origin"]
         remote.fetch_url.string.should eq "https://github.com/mosop/fetch.git"
-        remote.push_url.string.should eq "https://github.com/mosop/push.git"
+        remote.push_url?.not_nil!.string.should eq "https://github.com/mosop/push.git"
       end
     end
   end

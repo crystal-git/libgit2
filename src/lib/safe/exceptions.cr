@@ -1,4 +1,4 @@
-class Git::Safe
+module Git::Safe
   class CallError < Git::Exception
     getter function_name : String
     getter result : LibC::Int

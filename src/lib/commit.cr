@@ -1,7 +1,7 @@
 module Git
   class Commit
     getter repo : Repo
-    @safe : Safe::Commit
+    getter safe : Safe::Commit::Type
 
     def initialize(@repo, @safe)
     end
@@ -9,6 +9,11 @@ module Git
     @message : String?
     def message
       @message ||= Safe.string(:commit_message_raw, @safe)
+    end
+
+    def to_tree
+      Safe.call :commit_tree, out tree, @safe
+      Tree.new(Safe::Tree.heap(tree))
     end
   end
 end

@@ -1,7 +1,7 @@
 module Git
   class Ref
     getter repo : Repo
-    getter safe : Safe::Reference
+    getter safe : Safe::Reference::Type
 
     def initialize(@repo, @safe)
     end
@@ -44,65 +44,31 @@ module Git
     end
 
     def to_oid?
-      repo.ref_name_to_oid(name)
+      repo.ref_to_oid?(name)
     end
 
     def to_oid
-      to_oid?.not_nil!
+      repo.ref_to_oid(name)
     end
 
     def to_commit?
       if oid = to_oid?
-        repo.lookup_commit(oid)
+        repo.lookup_commit?(oid)
       end
     end
 
     def to_commit
-      to_commit?.not_nil!
+      repo.lookup_commit(to_oid)
     end
 
-    REFS_REMOTES_REMOTE = /^refs\/remotes\/([^\/]+)\/(.+)$/
-    REMOTES_REMOTE = /^remotes\/(^\/]+)\/(.+)$/
-
-    def self.remote?(name)
-      normalize(name).starts_with?("/refs/remotes/")
+    def to_annotated_commit
+      repo.get_annotated_commit(self)
     end
 
-    def self.normalize(name)
-      if REFS_REMOTES_REMOTE =~ name
-        name
-      elsif REMOTES_REMOTE =~ name
-        "refs/remotes/#{$1}/#{$2}"
-      elsif name.starts_with?("refs/heads/") || name.starts_with?("refs/tags/")
-        name
-      elsif name.starts_with?("heads/") || name.starts_with?("tags/")
-        "refs/#{name}"
-      else
-        "refs/heads/#{name}"
-      end
-    end
-
-    def self.normalize_remote(name, remote)
-      if name.starts_with?("refs/remotes/#{remote}/")
-        name
-      elsif name.starts_with?("remotes/#{remote}/")
-        "refs/#{name}"
-      elsif name.starts_with?("#{remote}/")
-        "refs/remotes/#{name}"
-      else
-        "refs/remotes/#{remote}/#{name}"
-      end
-    end
-
-    def self.to_local(name)
-      name = normalize(name)
-      if REFS_REMOTES_REMOTE =~ name
-        "refs/heads/#{$2}"
-      elsif REFS_REMOTES_REMOTE =~ name
-        "refs/heads/#{$2}"
-      else
-        name
-      end
+    def delete
+      Safe.call :reference_delete, @safe
     end
   end
 end
+
+require "./ref/*"

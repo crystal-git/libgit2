@@ -1,0 +1,13 @@
+#!/usr/bin/env bash
+
+mosop=/usr/local/mosop
+for i in "libgit2/0.25.1" "curl/7_52_1" "libssh2/1.8.0" "openssl/1_0_2k"; do
+  PKG_CONFIG_PATH="$mosop/$i/lib/pkgconfig:$PKG_CONFIG_PATH"
+done
+export PKG_CONFIG_PATH="$PKG_CONFIG_PATH"
+for i in libgit2 libcurl libssh2 libssl libcrypto; do
+  CRYSTAL_GIT_LDFLAGS="`pkg-config --static --libs $i` $CRYSTAL_GIT_LDFLAGS"
+done
+export CRYSTAL_GIT_LDFLAGS="$CRYSTAL_GIT_LDFLAGS"
+pkg-config --libs --static libgit2
+crystal spec $1

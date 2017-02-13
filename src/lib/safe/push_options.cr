@@ -1,14 +1,13 @@
-class Git::Safe
-  class PushOptions
-    Safe.define :push_options, type: :value, free: false
+module Git::Safe
+  module PushOptions
+    include Safe
+
+    define_safe :push_options, value: true, free: false
 
     def self.init
-      co = C::PushOptions.new
+      co = uninitialized C::PushOptions
       Safe.call :push_init_options, pointerof(co), C::PUSH_OPTIONS_VERSION
-      safe(co)
+      value(co)
     end
-
-    Safe.define_value_property "callbacks.credentials"
-    Safe.define_value_property "callbacks.payload"
   end
 end

@@ -1,4 +1,4 @@
-class Git::Safe
+module Git::Safe
   struct Call
     getter function_name : String
     getter result : LibC::Int

@@ -1,5 +1,7 @@
-class Git::Safe
-  class Remote
-    Safe.define :remote
+module Git::Safe
+  module Remote
+    include Safe
+
+    define_safe :remote
   end
 end

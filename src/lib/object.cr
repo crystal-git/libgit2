@@ -1,7 +1,7 @@
 module Git
   class Object
     getter repo : Repo
-    getter safe : Safe::Object
+    getter safe : Safe::Object::Type
 
     def initialize(@repo, @safe)
     end

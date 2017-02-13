@@ -10,7 +10,7 @@ current=`pwd`
 builddir=$current/build
 mkdir $builddir
 cd $builddir
-tar=v0.24.6.tar.gz
+tar=v0.25.1.tar.gz
 curl -L -O https://github.com/libgit2/libgit2/archive/$tar || _exit 1
 tar xzf $tar --strip-components=1 || _exit 1
 cd $current

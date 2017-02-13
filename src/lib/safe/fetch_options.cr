@@ -1,14 +1,13 @@
-class Git::Safe
-  class FetchOptions
-    Safe.define :fetch_options, type: :value, free: false
+module Git::Safe
+  module FetchOptions
+    include Safe
+
+    define_safe :fetch_options, value: true, free: false
 
     def self.init
-      fo = C::FetchOptions.new
+      fo = uninitialized C::FetchOptions
       Safe.call :fetch_init_options, pointerof(fo), C::FETCH_OPTIONS_VERSION
-      safe(fo)
+      value(fo)
     end
-
-    Safe.define_value_property "callbacks.credentials"
-    Safe.define_value_property "callbacks.payload"
   end
 end

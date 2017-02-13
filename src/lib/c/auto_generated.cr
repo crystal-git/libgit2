@@ -14,6 +14,7 @@ module Git
     ATTR_CHECK_INDEX_ONLY = 2
     BLAME_OPTIONS_VERSION = 1
     DIFF_OPTIONS_VERSION = 1
+    DIFF_HUNK_HEADER_SIZE = 128
     DIFF_FIND_OPTIONS_VERSION = 1
     DIFF_FORMAT_EMAIL_OPTIONS_VERSION = 1
     CHECKOUT_OPTIONS_VERSION = 1
@@ -22,6 +23,7 @@ module Git
     MERGE_FILE_OPTIONS_VERSION = 1
     MERGE_OPTIONS_VERSION = 1
     CHERRYPICK_OPTIONS_VERSION = 1
+    PROXY_OPTIONS_VERSION = 1
     REMOTE_CALLBACKS_VERSION = 1
     FETCH_OPTIONS_VERSION = 1
     PUSH_OPTIONS_VERSION = 1
@@ -57,6 +59,7 @@ module Git
     OptSetUserAgent = 13
     OptEnableStrictObjectCreation = 14
     OptSetSslCiphers = 15
+    OptGetUserAgent = 16
     fun libgit2_opts = git_libgit2_opts(option : LibC::Int, ...) : LibC::Int
     ObjAny = -2
     ObjBad = -1
@@ -209,7 +212,8 @@ module Git
       CertStrarray = 3
     end
     alias TransferProgressCb = (TransferProgress*, Void* -> LibC::Int)
-    alias PackbuilderProgress = (LibC::Int, LibC::UInt, LibC::UInt, Void* -> LibC::Int)
+    alias Uint32T = LibC::UInt
+    alias PackbuilderProgress = (LibC::Int, Uint32T, Uint32T, Void* -> LibC::Int)
     alias PushTransferProgress = (LibC::UInt, LibC::UInt, LibC::SizeT, Void* -> LibC::Int)
     struct PushUpdate
       src_refname : LibC::Char*
@@ -279,6 +283,8 @@ module Git
     RepositoryOpenNoSearch = 1
     RepositoryOpenCrossFs = 2
     RepositoryOpenBare = 4
+    RepositoryOpenNoDotgit = 8
+    RepositoryOpenFromEnv = 16
     fun repository_open_ext = git_repository_open_ext(out : X_Repository*, path : LibC::Char*, flags : LibC::UInt, ceiling_dirs : LibC::Char*) : LibC::Int
     fun repository_open_bare = git_repository_open_bare(out : X_Repository*, bare_path : LibC::Char*) : LibC::Int
     fun repository_free = git_repository_free(repo : X_Repository)
@@ -304,7 +310,6 @@ module Git
       initial_head : LibC::Char*
       origin_url : LibC::Char*
     end
-    alias Uint32T = LibC::UInt
     fun repository_init_ext = git_repository_init_ext(out : X_Repository*, repo_path : LibC::Char*, opts : RepositoryInitOptions*) : LibC::Int
     fun repository_head = git_repository_head(out : X_Reference*, repo : X_Repository) : LibC::Int
     type X_Reference = Void*
@@ -415,10 +420,11 @@ module Git
     fun blob_filtered_content = git_blob_filtered_content(out : Buf*, blob : X_Blob, as_path : LibC::Char*, check_for_binary_data : LibC::Int) : LibC::Int
     fun blob_create_fromworkdir = git_blob_create_fromworkdir(id : Oid*, repo : X_Repository, relative_path : LibC::Char*) : LibC::Int
     fun blob_create_fromdisk = git_blob_create_fromdisk(id : Oid*, repo : X_Repository, path : LibC::Char*) : LibC::Int
-    fun blob_create_fromchunks = git_blob_create_fromchunks(id : Oid*, repo : X_Repository, hintpath : LibC::Char*, callback : BlobChunkCb, payload : Void*) : LibC::Int
-    alias BlobChunkCb = (LibC::Char*, LibC::SizeT, Void* -> LibC::Int)
+    fun blob_create_fromstream = git_blob_create_fromstream(out : Writestream**, repo : X_Repository, hintpath : LibC::Char*) : LibC::Int
+    fun blob_create_fromstream_commit = git_blob_create_fromstream_commit(out : Oid*, stream : Writestream*) : LibC::Int
     fun blob_create_frombuffer = git_blob_create_frombuffer(id : Oid*, repo : X_Repository, buffer : Void*, len : LibC::SizeT) : LibC::Int
     fun blob_is_binary = git_blob_is_binary(blob : X_Blob) : LibC::Int
+    fun blob_dup = git_blob_dup(out : X_Blob*, source : X_Blob) : LibC::Int
     BlameNormal = 0
     BlameTrackCopiesSameFile = 1
     BlameTrackCopiesSameCommitMoves = 2
@@ -526,6 +532,20 @@ module Git
       TreewalkPost = 1
     end
     alias TreewalkCb = (LibC::Char*, X_TreeEntry, Void* -> LibC::Int)
+    fun tree_dup = git_tree_dup(out : X_Tree*, source : X_Tree) : LibC::Int
+    TreeUpdateUpsert = 0
+    TreeUpdateRemove = 1
+    fun tree_create_updated = git_tree_create_updated(out : Oid*, repo : X_Repository, baseline : X_Tree, nupdates : LibC::SizeT, updates : TreeUpdate*) : LibC::Int
+    struct TreeUpdate
+      action : TreeUpdateT
+      id : Oid
+      filemode : FilemodeT
+      path : LibC::Char*
+    end
+    enum TreeUpdateT
+      TreeUpdateUpsert = 0
+      TreeUpdateRemove = 1
+    end
     struct Strarray
       strings : LibC::Char**
       count : LibC::SizeT
@@ -562,6 +582,7 @@ module Git
     alias ReferenceForeachCb = (X_Reference, Void* -> LibC::Int)
     fun reference_foreach_name = git_reference_foreach_name(repo : X_Repository, callback : ReferenceForeachNameCb, payload : Void*) : LibC::Int
     alias ReferenceForeachNameCb = (LibC::Char*, Void* -> LibC::Int)
+    fun reference_dup = git_reference_dup(dest : X_Reference*, source : X_Reference) : LibC::Int
     fun reference_free = git_reference_free(ref : X_Reference)
     fun reference_cmp = git_reference_cmp(ref1 : X_Reference, ref2 : X_Reference) : LibC::Int
     fun reference_iterator_new = git_reference_iterator_new(out : X_ReferenceIterator*, repo : X_Repository) : LibC::Int
@@ -682,6 +703,7 @@ module Git
       size : OffT
       flags : Uint32T
       mode : Uint16T
+      id_abbrev : Uint16T
     end
     alias DiffProgressCb = (X_Diff, LibC::Char*, LibC::Char*, Void* -> LibC::Int)
     DiffBinaryNone = 0
@@ -746,6 +768,7 @@ module Git
     fun diff_foreach = git_diff_foreach(diff : X_Diff, file_cb : DiffFileCb, binary_cb : DiffBinaryCb, hunk_cb : DiffHunkCb, line_cb : DiffLineCb, payload : Void*) : LibC::Int
     alias DiffFileCb = (DiffDelta*, LibC::Float, Void* -> LibC::Int)
     struct DiffBinary
+      contains_data : LibC::UInt
       old_file : DiffBinaryFile
       new_file : DiffBinaryFile
     end
@@ -794,9 +817,11 @@ module Git
       DiffFormatNameOnly = 4
       DiffFormatNameStatus = 5
     end
+    fun diff_to_buf = git_diff_to_buf(out : Buf*, diff : X_Diff, format : DiffFormatT) : LibC::Int
     fun diff_blobs = git_diff_blobs(old_blob : X_Blob, old_as_path : LibC::Char*, new_blob : X_Blob, new_as_path : LibC::Char*, options : DiffOptions*, file_cb : DiffFileCb, binary_cb : DiffBinaryCb, hunk_cb : DiffHunkCb, line_cb : DiffLineCb, payload : Void*) : LibC::Int
     fun diff_blob_to_buffer = git_diff_blob_to_buffer(old_blob : X_Blob, old_as_path : LibC::Char*, buffer : LibC::Char*, buffer_len : LibC::SizeT, buffer_as_path : LibC::Char*, options : DiffOptions*, file_cb : DiffFileCb, binary_cb : DiffBinaryCb, hunk_cb : DiffHunkCb, line_cb : DiffLineCb, payload : Void*) : LibC::Int
     fun diff_buffers = git_diff_buffers(old_buffer : Void*, old_len : LibC::SizeT, old_as_path : LibC::Char*, new_buffer : Void*, new_len : LibC::SizeT, new_as_path : LibC::Char*, options : DiffOptions*, file_cb : DiffFileCb, binary_cb : DiffBinaryCb, hunk_cb : DiffHunkCb, line_cb : DiffLineCb, payload : Void*) : LibC::Int
+    fun diff_from_buffer = git_diff_from_buffer(out : X_Diff*, content : LibC::Char*, content_len : LibC::SizeT) : LibC::Int
     alias DiffStats = Void
     DiffStatsNone = 0
     DiffStatsFull = 1
@@ -974,6 +999,8 @@ module Git
     fun index_owner = git_index_owner(index : X_Index) : X_Repository
     fun index_caps = git_index_caps(index : X_Index) : LibC::Int
     fun index_set_caps = git_index_set_caps(index : X_Index, caps : LibC::Int) : LibC::Int
+    fun index_version = git_index_version(index : X_Index) : LibC::UInt
+    fun index_set_version = git_index_set_version(index : X_Index, version : LibC::UInt) : LibC::Int
     fun index_read = git_index_read(index : X_Index, force : LibC::Int) : LibC::Int
     fun index_write = git_index_write(index : X_Index) : LibC::Int
     fun index_path = git_index_path(index : X_Index) : LibC::Char*
@@ -1067,6 +1094,7 @@ module Git
       target_limit : LibC::UInt
       metric : DiffSimilarityMetric*
       recursion_limit : LibC::UInt
+      default_driver : LibC::Char*
       file_favor : MergeFileFavorT
       file_flags : MergeFileFlagT
     end
@@ -1205,10 +1233,27 @@ module Git
     fun packbuilder_hash = git_packbuilder_hash(pb : X_Packbuilder) : Oid*
     fun packbuilder_foreach = git_packbuilder_foreach(pb : X_Packbuilder, cb : PackbuilderForeachCb, payload : Void*) : LibC::Int
     alias PackbuilderForeachCb = (Void*, LibC::SizeT, Void* -> LibC::Int)
-    fun packbuilder_object_count = git_packbuilder_object_count(pb : X_Packbuilder) : Uint32T
-    fun packbuilder_written = git_packbuilder_written(pb : X_Packbuilder) : Uint32T
+    fun packbuilder_object_count = git_packbuilder_object_count(pb : X_Packbuilder) : LibC::SizeT
+    fun packbuilder_written = git_packbuilder_written(pb : X_Packbuilder) : LibC::SizeT
     fun packbuilder_set_callbacks = git_packbuilder_set_callbacks(pb : X_Packbuilder, progress_cb : PackbuilderProgress, progress_cb_payload : Void*) : LibC::Int
     fun packbuilder_free = git_packbuilder_free(pb : X_Packbuilder)
+    ProxyNone = 0
+    ProxyAuto = 1
+    ProxySpecified = 2
+    fun proxy_init_options = git_proxy_init_options(opts : ProxyOptions*, version : LibC::UInt) : LibC::Int
+    struct ProxyOptions
+      version : LibC::UInt
+      type : ProxyT
+      url : LibC::Char*
+      credentials : CredAcquireCb
+      certificate_check : TransportCertificateCheckCb
+      payload : Void*
+    end
+    enum ProxyT
+      ProxyNone = 0
+      ProxyAuto = 1
+      ProxySpecified = 2
+    end
     fun remote_create = git_remote_create(out : X_Remote*, repo : X_Repository, name : LibC::Char*, url : LibC::Char*) : LibC::Int
     fun remote_create_with_fetchspec = git_remote_create_with_fetchspec(out : X_Remote*, repo : X_Repository, name : LibC::Char*, url : LibC::Char*, fetch : LibC::Char*) : LibC::Int
     fun remote_create_anonymous = git_remote_create_anonymous(out : X_Remote*, repo : X_Repository, url : LibC::Char*) : LibC::Int
@@ -1226,7 +1271,7 @@ module Git
     fun remote_get_push_refspecs = git_remote_get_push_refspecs(array : Strarray*, remote : X_Remote) : LibC::Int
     fun remote_refspec_count = git_remote_refspec_count(remote : X_Remote) : LibC::SizeT
     fun remote_get_refspec = git_remote_get_refspec(remote : X_Remote, n : LibC::SizeT) : X_Refspec
-    fun remote_connect = git_remote_connect(remote : X_Remote, direction : Direction, callbacks : RemoteCallbacks*, custom_headers : Strarray*) : LibC::Int
+    fun remote_connect = git_remote_connect(remote : X_Remote, direction : Direction, callbacks : RemoteCallbacks*, proxy_opts : ProxyOptions*, custom_headers : Strarray*) : LibC::Int
     fun remote_ls = git_remote_ls(out : RemoteHead***, size : LibC::SizeT*, remote : X_Remote) : LibC::Int
     fun remote_connected = git_remote_connected(remote : X_Remote) : LibC::Int
     fun remote_stop = git_remote_stop(remote : X_Remote)
@@ -1248,6 +1293,7 @@ module Git
       prune : FetchPruneT
       update_fetchhead : LibC::Int
       download_tags : RemoteAutotagOptionT
+      proxy_opts : ProxyOptions
       custom_headers : Strarray
     end
     enum FetchPruneT
@@ -1266,6 +1312,7 @@ module Git
       version : LibC::UInt
       pb_parallelism : LibC::UInt
       callbacks : RemoteCallbacks
+      proxy_opts : ProxyOptions
       custom_headers : Strarray
     end
     fun remote_download = git_remote_download(remote : X_Remote, refspecs : Strarray*, opts : FetchOptions*) : LibC::Int
@@ -1334,6 +1381,9 @@ module Git
     fun commit_create = git_commit_create(id : Oid*, repo : X_Repository, update_ref : LibC::Char*, author : Signature*, committer : Signature*, message_encoding : LibC::Char*, message : LibC::Char*, tree : X_Tree, parent_count : LibC::SizeT, parents : X_Commit*) : LibC::Int
     fun commit_create_v = git_commit_create_v(id : Oid*, repo : X_Repository, update_ref : LibC::Char*, author : Signature*, committer : Signature*, message_encoding : LibC::Char*, message : LibC::Char*, tree : X_Tree, parent_count : LibC::SizeT, ...) : LibC::Int
     fun commit_amend = git_commit_amend(id : Oid*, commit_to_amend : X_Commit, update_ref : LibC::Char*, author : Signature*, committer : Signature*, message_encoding : LibC::Char*, message : LibC::Char*, tree : X_Tree) : LibC::Int
+    fun commit_create_buffer = git_commit_create_buffer(out : Buf*, repo : X_Repository, author : Signature*, committer : Signature*, message_encoding : LibC::Char*, message : LibC::Char*, tree : X_Tree, parent_count : LibC::SizeT, parents : X_Commit*) : LibC::Int
+    fun commit_create_with_signature = git_commit_create_with_signature(out : Oid*, repo : X_Repository, commit_content : LibC::Char*, signature : LibC::Char*, signature_field : LibC::Char*) : LibC::Int
+    fun commit_dup = git_commit_dup(out : X_Commit*, source : X_Commit) : LibC::Int
     ConfigLevelProgramdata = 1
     ConfigLevelSystem = 2
     ConfigLevelXdg = 3
@@ -1530,6 +1580,12 @@ module Git
     fun odb_read_header = git_odb_read_header(len_out : LibC::SizeT*, type_out : Otype*, db : X_Odb, id : Oid*) : LibC::Int
     fun odb_exists = git_odb_exists(db : X_Odb, id : Oid*) : LibC::Int
     fun odb_exists_prefix = git_odb_exists_prefix(out : Oid*, db : X_Odb, short_id : Oid*, len : LibC::SizeT) : LibC::Int
+    struct OdbExpandId
+      id : Oid
+      length : LibC::UShort
+      type : Otype
+    end
+    fun odb_expand_ids = git_odb_expand_ids(db : X_Odb, ids : OdbExpandId*, count : LibC::SizeT) : LibC::Int
     fun odb_refresh = git_odb_refresh(db : Odb*) : LibC::Int
     fun odb_foreach = git_odb_foreach(db : X_Odb, cb : OdbForeachCb, payload : Void*) : LibC::Int
     alias OdbForeachCb = (Oid*, Void* -> LibC::Int)
@@ -1714,6 +1770,7 @@ module Git
     fun signature_new = git_signature_new(out : Signature**, name : LibC::Char*, email : LibC::Char*, time : TimeT, offset : LibC::Int) : LibC::Int
     fun signature_now = git_signature_now(out : Signature**, name : LibC::Char*, email : LibC::Char*) : LibC::Int
     fun signature_default = git_signature_default(out : Signature**, repo : X_Repository) : LibC::Int
+    fun signature_from_buffer = git_signature_from_buffer(out : Signature**, buf : LibC::Char*) : LibC::Int
     fun signature_dup = git_signature_dup(dest : Signature**, sig : Signature*) : LibC::Int
     fun signature_free = git_signature_free(sig : Signature*)
     StashDefault = 0
@@ -1854,6 +1911,7 @@ module Git
       checkout_opts : CheckoutOptions
       fetch_opts : FetchOptions
       clone_checkout_strategy : LibC::UInt
+      allow_fetch : LibC::Int
     end
     fun submodule_update_init_options = git_submodule_update_init_options(opts : SubmoduleUpdateOptions*, version : LibC::UInt) : LibC::Int
     fun submodule_update = git_submodule_update(submodule : X_Submodule, init : LibC::Int, options : SubmoduleUpdateOptions*) : LibC::Int
@@ -1923,6 +1981,7 @@ module Git
     fun tag_foreach = git_tag_foreach(repo : X_Repository, callback : TagForeachCb, payload : Void*) : LibC::Int
     alias TagForeachCb = (LibC::Char*, Oid*, Void* -> LibC::Int)
     fun tag_peel = git_tag_peel(tag_target_out : X_Object*, tag : X_Tag) : LibC::Int
+    fun tag_dup = git_tag_dup(out : X_Tag*, source : X_Tag) : LibC::Int
     fun transaction_new = git_transaction_new(out : X_Transaction*, repo : X_Repository) : LibC::Int
     fun transaction_lock_ref = git_transaction_lock_ref(tx : X_Transaction, refname : LibC::Char*) : LibC::Int
     fun transaction_set_target = git_transaction_set_target(tx : X_Transaction, refname : LibC::Char*, target : Oid*, sig : Signature*, msg : LibC::Char*) : LibC::Int

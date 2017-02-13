@@ -1,5 +1,7 @@
-class Git::Safe
-  class Reference
-    Safe.define :reference
+module Git::Safe
+  module Reference
+    include Safe
+
+    define_safe :reference
   end
 end

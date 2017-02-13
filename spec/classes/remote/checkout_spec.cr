@@ -3,7 +3,7 @@ require "../../spec_helper"
 module GitRemoteClassCheckoutFeature
   GitFeature.setup "#{__DIR__}/checkout"
 
-  describe name do
+  pending name do
     it "checkouts a remote branch into local" do
       Dir.tmp do |tmpdir|
         Dir.cd(tmpdir) do
@@ -18,7 +18,7 @@ module GitRemoteClassCheckoutFeature
       end
     end
 
-    it "fetches and checkouts a branch into local" do
+    pending "fetches and checkouts a branch into local" do
       Dir.tmp do |tmpdir|
         Dir.cd(tmpdir) do
           `git init`

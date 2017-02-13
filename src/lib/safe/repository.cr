@@ -1,5 +1,7 @@
-class Git::Safe
-  class Repository
-    Safe.define :repository
+module Git::Safe
+  module Repository
+    include Safe
+
+    define_safe :repository
   end
 end
