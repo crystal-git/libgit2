@@ -303,10 +303,10 @@ module Git
       end
     end
 
-    def create_empty_commit(message : String = "initial")
+    def create_commit(message : String, update_ref : String? = nil, signature : Signature? = nil, message_encoding : String?= nil, parents : Commit | Array(Commit) | Nil = nil)
       treeid = new_index.write_tree
       tree = lookup_tree(treeid)
-      create_commit(tree, message)
+      create_commit(tree, message, update_ref: update_ref, signature: signature, message_encoding: message_encoding, parents: parents)
     end
 
     def lookup_tree(oid : Oid)
@@ -314,10 +314,23 @@ module Git
       Tree.new(Safe::Tree.heap(tree))
     end
 
-    def create_commit(tree : Tree, message : String, update_ref : String? = nil, signature : Signature? = nil, message_encoding : String? = nil)
+    def create_commit(tree : Tree, message : String, update_ref : String? = nil, signature : Signature? = nil, message_encoding : String? = nil, parents : Commit | Array(Commit) | Nil = nil)
+      parents = case parents
+      when Commit
+        [parents]
+      when Array(Commit)
+        parents
+      else
+        [] of Commit
+      end
       signature ||= self.signature? || new_default_signature
-      Safe.call :commit_create, out id, @safe, update_ref, signature.safe, signature.safe, message_encoding, message, tree.safe, 0, nil
+      Safe.call :commit_create, out id, @safe, update_ref, signature.safe.p, signature.safe.p, message_encoding, message, tree.safe, parents.size, parents.map{|i| i.safe.to_unsafe}
       Oid.new(Safe::Oid.value(id))
+    end
+
+    def ahead_behind(local : Oid, upstream : Oid)
+      Safe.call :graph_ahead_behind, out ahead, out behind, @safe, local.safe.p, upstream.safe.p
+      {ahead, behind}
     end
   end
 end
