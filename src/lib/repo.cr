@@ -310,7 +310,7 @@ module Git
     end
 
     def lookup_tree(oid : Oid)
-      Safe.call :tree_lookup, out tree, @safe, oid.p
+      Safe.call :tree_lookup, out tree, @safe, oid.safe.p
       Tree.new(Safe::Tree.heap(tree))
     end
 
