@@ -142,6 +142,10 @@ module Git
       Safe.call :repository_set_head, @safe, refname
     end
 
+    def set_head(oid : Oid)
+      Safe.call :repository_set_head_detached, @safe, oid.safe.p
+    end
+
     def set_head(commit : AnnotatedCommit)
       Safe.call :repository_set_head_detached_from_annotated, @safe, commit.safe
     end
