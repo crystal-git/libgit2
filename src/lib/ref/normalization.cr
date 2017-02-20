@@ -47,5 +47,14 @@ module Git
         name
       end
     end
+
+    def self.shorten(name)
+      name = normalize(name)
+      if REFS_HEADS =~ name
+        $1
+      else
+        name
+      end
+    end
   end
 end
