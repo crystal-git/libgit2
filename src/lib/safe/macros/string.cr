@@ -10,7 +10,6 @@ module Git::Safe
 
   macro p_to_string_or_nil(p)
     %p = {{p}}
-    puts %p
     %p.as(Pointer(Void)) == Pointer(Void).null ? Nil : String.new(%p.as(Pointer(UInt8)))
   end
 end
