@@ -332,5 +332,25 @@ module Git
       Safe.call :graph_ahead_behind, out ahead, out behind, @safe, local.safe.p, upstream.safe.p
       {ahead, behind}
     end
+
+    class ReferenceCallbackPayload
+      property! repo : Repo
+      property! callback : Proc(Ref, Nil)
+    end
+
+    @@reference_foreach_name_callback = C::ReferenceForeachNameCb.new do |name, payload|
+      this = Box(ReferenceCallbackPayload).unbox(payload)
+      if ref = this.repo.lookup_ref?(String.new(name))
+        this.callback.call ref
+      end
+      0
+    end
+
+    def each_ref(&block : Ref -> _)
+      payload = ReferenceCallbackPayload.new
+      payload.repo = self
+      payload.callback = block
+      Safe.call :reference_foreach_name, @safe, @@reference_foreach_name_callback, Box(ReferenceCallbackPayload).box(payload)
+    end
   end
 end
