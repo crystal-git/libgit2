@@ -3,6 +3,8 @@ module Git
     REFS_REMOTES_REMOTE = /^refs\/remotes\/([^\/]+)\/(.+)$/
     REMOTES_REMOTE = /^remotes\/(^\/]+)\/(.+)$/
     REFS_HEADS = /^refs\/heads\/(.+)$/
+    REFS_TAGS = /^refs\/tags\/(.+)$/
+    REFS_REMOTES = /^refs\/remotes\/(.+)$/
 
     def self.remote?(name)
       normalize(name).starts_with?("/refs/remotes/")
@@ -51,6 +53,10 @@ module Git
     def self.shorten(name)
       name = normalize(name)
       if REFS_HEADS =~ name
+        $1
+      elsif REFS_TAGS =~ name
+        $1
+      elsif REFS_REMOTES =~ name
         $1
       else
         name
