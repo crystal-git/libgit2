@@ -38,7 +38,7 @@ module Git
 
     # Creates a reference that points to the corresponding remote reference.
     def create_ref?(name : String, non_fast_forward = true)
-      remotename = Ref.normalize_remote(name, self.name)
+      remotename = Ref.to_remote(name, self.name)
       localname = Ref.to_local(name)
       remote = repo.lookup_ref?(remotename) || begin
         plus = non_fast_forward ? "+" : ""
