@@ -8,7 +8,7 @@ module Git
     SPECIAL_HEADS = %w(HEAD ORIG_HEAD FETCH_HEAD MERGE_HEAD)
 
     def self.normalize(name : String, &block : -> String)
-      if name.starts_with?("refs/remotes") =~ name
+      if name.starts_with?("refs/remotes")
         name
       elsif name.starts_with?("remotes/")
         "refs/#{name}"
