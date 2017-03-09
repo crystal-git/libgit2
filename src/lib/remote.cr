@@ -43,8 +43,6 @@ module Git
       remote = repo.lookup_ref?(remotename) || begin
         plus = non_fast_forward ? "+" : ""
         fetch "#{plus}#{localname}:#{localname}"
-        puts "fetch... #{"#{plus}#{localname}:#{localname}"}".colorize.cyan
-        puts "remotename: #{remotename}".colorize.cyan
         repo.lookup_ref?(remotename)
       end
       remote && repo.create_ref(localname, remote.to_oid, force: true)
