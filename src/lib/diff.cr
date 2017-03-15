@@ -6,23 +6,23 @@ module Git
     end
 
     def empty?
-      delta_count == 0
+      size == LibC::SizeT.zero
     end
 
-    def delta_count
+    def size
       C.diff_num_deltas(@safe)
     end
 
     def each
-      i = 0
-      while i < delta_count
+      i = LibC::SizeT.zero
+      while i < size
         yield delta_at(i)
         i += 1
       end
     end
 
     def delta_at(index : LibC::SizeT)
-      Safe::DiffDelta.pointer(Safe.call(:diff_get_delta, @safe, index))
+      DiffDelta.new(Safe::DiffDelta.unfree(C.diff_get_delta(@safe, index)))
     end
   end
 end
