@@ -13,7 +13,7 @@ module Git
 
     def to_tree
       Safe.call :commit_tree, out tree, @safe
-      Tree.new(Safe::Tree.heap(tree))
+      Tree.new(Safe::Tree.free(tree))
     end
   end
 end

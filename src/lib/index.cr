@@ -19,7 +19,7 @@ module Git
 
     def new_conflict_iterator
       Safe.call :index_conflict_iterator_new, out it, @safe
-      IndexConflictIterator.new(Safe::IndexConflictIterator.heap(it))
+      IndexConflictIterator.new(Safe::IndexConflictIterator.free(it))
     end
 
     def each_conflict

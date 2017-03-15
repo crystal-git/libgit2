@@ -20,7 +20,7 @@ module Git
 
     def inmemory_index
       Safe.call :rebase_inmemory_index, out index, @safe
-      Index.new(Safe::Index.heap(index))
+      Index.new(Safe::Index.free(index))
     end
 
     def commit(signature : Signature)

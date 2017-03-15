@@ -1,7 +1,7 @@
 module Git::Safe
   module Object
-    include Safe
+    extend Safe
 
-    define_safe :object
+    define_x :object
   end
 end

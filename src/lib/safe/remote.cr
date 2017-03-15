@@ -1,7 +1,7 @@
 module Git::Safe
   module Remote
-    include Safe
+    extend Safe
 
-    define_safe :remote
+    define_x :remote
   end
 end

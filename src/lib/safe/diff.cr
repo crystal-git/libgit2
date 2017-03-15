@@ -1,7 +1,7 @@
 module Git::Safe
   module Diff
-    include Safe
+    extend Safe
 
-    define_safe :diff
+    define_x :diff
   end
 end

@@ -4,9 +4,14 @@ version: 0.5.1
 authors:
   - mosop
 
-crystal: 0.20.5
+crystal: 0.21.1
 
 license: MIT
+
+dependencies:
+  safec:
+    github: mosop/safec
+    version: 0.1.0
 
 development_dependencies:
   crystal_plus:

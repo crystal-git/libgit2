@@ -1,7 +1,7 @@
 module Git::Safe
   module IndexEntry
-    include Safe
+    extend Safe
 
-    define_safe :index_entry, value: true, free: false
+    define_struct :index_entry
   end
 end

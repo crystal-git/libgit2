@@ -1,7 +1,7 @@
 module Git::Safe
   module Reference
-    include Safe
+    extend Safe
 
-    define_safe :reference
+    define_x :reference
   end
 end

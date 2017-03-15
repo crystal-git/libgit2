@@ -1,7 +1,7 @@
 module Git::Safe
   module Commit
-    include Safe
+    extend Safe
 
-    define_safe :commit
+    define_x :commit
   end
 end

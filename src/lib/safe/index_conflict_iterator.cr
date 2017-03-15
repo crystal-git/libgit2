@@ -1,7 +1,7 @@
 module Git::Safe
   module IndexConflictIterator
-    include Safe
+    extend Safe
 
-    define_safe :index_conflict_iterator
+    define_x :index_conflict_iterator
   end
 end

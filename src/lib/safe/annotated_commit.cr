@@ -1,7 +1,7 @@
 module Git::Safe
   module AnnotatedCommit
-    include Safe
+    extend Safe
 
-    define_safe :annotated_commit
+    define_x :annotated_commit
   end
 end

@@ -23,7 +23,7 @@ module Git
     def self.open(path : String)
       Safe.call :repository_open, out repo, path do |call|
         if call.success?
-          git = new(Safe::Repository.heap(repo))
+          git = new(Safe::Repository.free(repo))
           expected = File.real_path(path)
           actual = File.real_path(git.path)
           raise NotExactLocation.new(expected, actual) unless actual.starts_with?(expected)
@@ -36,7 +36,7 @@ module Git
 
     def self.init(path : String, bare = false)
       Safe.call :repository_init, out repo, path, bare ? 1 : 0
-      new(Safe::Repository.heap(repo))
+      new(Safe::Repository.free(repo))
     end
 
     @path : String?
@@ -49,7 +49,7 @@ module Git
       @remotes ||= ({} of String => Remote).tap do |h|
         a = uninitialized C::Strarray
         Safe.call :remote_list, pointerof(a), @safe
-        Safe::Strarray.pointer(pointerof(a)).each do |name|
+        Strarray.new(Safe::Strarray.unfree(pointerof(a))).each do |name|
           h[name] = lookup_remote(name)
         end
       end
@@ -62,7 +62,7 @@ module Git
     def create_remote(name : String, url : String)
       Safe.call :remote_create, out unsafe, @safe, name, url
       update_remotes
-      Remote.new(self, Safe::Remote.heap(unsafe), name)
+      Remote.new(self, Safe::Remote.free(unsafe), name)
     end
 
     # Creates a new remote.
@@ -83,7 +83,7 @@ module Git
 
     def lookup_remote(name)
       Safe.call :remote_lookup, out remote, @safe, name
-      Remote.new(self, Safe::Remote.heap(remote), name)
+      Remote.new(self, Safe::Remote.free(remote), name)
     end
 
     def lookup_remote?(name)
@@ -96,7 +96,7 @@ module Git
 
     def parse_rev(spec : String)
       Safe.call :revparse_single, out obj, @safe, spec
-      Object.new(self, Safe::Object.heap(obj))
+      Object.new(self, Safe::Object.free(obj))
     end
 
     def parse_rev?(spec : String)
@@ -109,7 +109,7 @@ module Git
 
     def lookup_ref(name)
       Safe.call :reference_dwim, out ref, @safe, name
-      Ref.new(self, Safe::Reference.heap(ref))
+      Ref.new(self, Safe::Reference.free(ref))
     end
 
     def lookup_ref?(name)
@@ -127,7 +127,7 @@ module Git
 
     def head
       Safe.call :repository_head, out ref, @safe
-      Ref.new(self, Safe::Reference.heap(ref))
+      Ref.new(self, Safe::Reference.free(ref))
     end
 
     def head?
@@ -152,7 +152,7 @@ module Git
 
     def create_ref(name : String, oid : Oid, force = false)
       Safe.call :reference_create, out ref, @safe, name, oid.safe.p, force ? 1 : 0, Util.null_pstr
-      Ref.new(self, Safe::Reference.heap(ref))
+      Ref.new(self, Safe::Reference.free(ref))
     end
 
     # Creates a reference that points to HEAD.
@@ -187,7 +187,7 @@ module Git
 
     def lookup_commit(oid : Oid)
       Safe.call :commit_lookup, out commit, @safe, oid.safe.p
-      Commit.new(self, Safe::Commit.heap(commit))
+      Commit.new(self, Safe::Commit.free(commit))
     end
 
     def lookup_commit?(oid : Oid)
@@ -200,7 +200,7 @@ module Git
 
     def get_annotated_commit(ref : Ref)
       Safe.call :annotated_commit_from_ref, out commit, @safe, ref.safe
-      AnnotatedCommit.new(self, Safe::AnnotatedCommit.heap(commit))
+      AnnotatedCommit.new(self, Safe::AnnotatedCommit.free(commit))
     end
 
     def rebase(upstream : AnnotatedCommit, branch : AnnotatedCommit? = nil, onto : AnnotatedCommit? = nil, options : RebaseOptions? = nil)
@@ -214,7 +214,7 @@ module Git
       options = options.dup
       signature ||= self.signature? || new_default_signature
       Safe.call :rebase_init, out unsafe_rebase, @safe, safe_branch, upstream.safe, safe_onto, options.p
-      rebase = Rebase.new(self, Safe::Rebase.heap(unsafe_rebase))
+      rebase = Rebase.new(self, Safe::Rebase.free(unsafe_rebase))
       while rebase.next
         index = options.value.inmemory == 1 ? rebase.inmemory_index : new_index
         yield rebase, index
@@ -229,7 +229,7 @@ module Git
 
     def new_default_signature
       Safe.call :signature_default, out signature, @safe
-      Signature.new(Safe::Signature.heap(signature))
+      Signature.new(Safe::Signature.free(signature))
     end
 
     def analyze_merge(their : AnnotatedCommit | Array(AnnotatedCommit), preference : C::MergePreferenceT? = nil)
@@ -252,7 +252,7 @@ module Git
       options ||= diff_options? || DiffOptions.new
       tree ||= head.to_commit.to_tree
       Safe.call :diff_tree_to_workdir, out diff, @safe, tree.safe, options.p
-      Diff.new(Safe::Diff.heap(diff))
+      Diff.new(Safe::Diff.free(diff))
     end
 
     def diff_to_index(tree : Tree? = nil, index : Index? = nil, options : DiffOptions? = nil)
@@ -281,7 +281,7 @@ module Git
 
     def new_index
       Safe.call :repository_index, out index, @safe
-      Index.new(Safe::Index.heap(index))
+      Index.new(Safe::Index.free(index))
     end
 
     def onto(ref : Ref?, type : C::ResetT, checkout_options : CheckoutOptions? = nil, &block)
@@ -319,7 +319,7 @@ module Git
 
     def lookup_tree(oid : Oid)
       Safe.call :tree_lookup, out tree, @safe, oid.safe.p
-      Tree.new(Safe::Tree.heap(tree))
+      Tree.new(Safe::Tree.free(tree))
     end
 
     def create_commit(tree : Tree, message : String, update_ref : String? = nil, signature : Signature? = nil, message_encoding : String? = nil, parents : Commit | Array(Commit) | Nil = nil)

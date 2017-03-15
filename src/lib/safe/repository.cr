@@ -1,7 +1,7 @@
 module Git::Safe
   module Repository
-    include Safe
+    extend Safe
 
-    define_safe :repository
+    define_x :repository
   end
 end

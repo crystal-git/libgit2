@@ -1,7 +1,7 @@
 module Git::Safe
   module Index
-    include Safe
+    extend Safe
 
-    define_safe :index
+    define_x :index
   end
 end

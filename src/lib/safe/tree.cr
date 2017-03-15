@@ -1,7 +1,7 @@
 module Git::Safe
   module Tree
-    include Safe
+    extend Safe
 
-    define_safe :tree
+    define_x :tree
   end
 end

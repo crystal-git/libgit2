@@ -1,7 +1,7 @@
 module Git::Safe
   module Signature
-    include Safe
+    extend Safe
 
-    define_safe :signature, value: true
+    define_struct :signature
   end
 end

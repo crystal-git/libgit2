@@ -1,7 +1,7 @@
 module Git::Safe
   module Rebase
-    include Safe
+    extend Safe
 
-    define_safe :rebase
+    define_x :rebase
   end
 end
