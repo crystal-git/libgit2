@@ -248,10 +248,18 @@ module Git
       Safe.call(:graph_descendant_of, @safe, commit.safe.p, ancestor.safe.p) == 1
     end
 
-    def diff_to_workdir(tree : Tree, options : DiffOptions? = nil)
+    def diff_to_workdir(tree : Tree? = nil, options : DiffOptions? = nil)
       options ||= diff_options? || DiffOptions.new
+      tree ||= head.to_commit.to_tree
       Safe.call :diff_tree_to_workdir, out diff, @safe, tree.safe, options.p
       Diff.new(Safe::Diff.heap(diff))
+    end
+
+    def diff_to_index(tree : Tree? = nil, index : Index? = nil, options : DiffOptions? = nil)
+      options ||= diff_options? || DiffOptions.new
+      tree ||= head.to_commit.to_tree
+      Safe.call :diff_tree_to_index, out diff, @safe, tree.safe, index, options.p
+      Diff.new(Safe::Diff.free(diff))
     end
 
     def reset(commit : AnnotatedCommit, type : C::ResetT, checkout_options : CheckoutOptions? = nil)
