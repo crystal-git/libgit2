@@ -6,6 +6,7 @@ module Git
     end
 
     def each
+      return if @safe.value.count < 1
       (0..(@safe.value.count-1)).each do |i|
         yield String.new(@safe.value.strings[i])
       end
