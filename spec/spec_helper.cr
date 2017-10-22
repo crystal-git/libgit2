@@ -1,6 +1,6 @@
 require "spec"
 require "crystal_plus/dir/.tmp"
-require "../src/git"
+require "../src/libgit2"
 
 module GitFeature
   macro setup(dir)
