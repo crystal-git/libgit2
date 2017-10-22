@@ -15,7 +15,7 @@ Add this to your application's `shard.yml`:
 ```yaml
 dependencies:
   git:
-    github: mosop/git
+    github: crystal-git/git
 ```
 
 <a name="code_samples"></a>
